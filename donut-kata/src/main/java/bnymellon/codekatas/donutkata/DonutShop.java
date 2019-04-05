@@ -27,6 +27,7 @@ import org.eclipse.collections.api.multimap.Multimap;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.primitive.ObjectDoublePair;
 import org.eclipse.collections.api.tuple.primitive.ObjectIntPair;
+import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.factory.Bags;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Sets;
@@ -139,35 +140,47 @@ public class DonutShop
         // Hint: Look at the domain and use deliveries which have collections of ordered donuts
         // Hint: You will need to flatten the donuts and collect their donut types
         // Hint: Bag has a method named topOccurrences(n)
-        return null;
+
+        return deliveries
+                .flatCollect(Delivery::getDonuts)
+                .collect(Donut::getType)
+                .toBag()
+                .topOccurrences(n);
     }
 
     public double getTotalDeliveryValueFor(LocalDate date)
     {
+        return deliveries
+                .select(Predicates.attributeEqual(Delivery::getDate, date))
+                .sumOfDouble(Delivery::getTotalPrice);
         // TODO - Write the code necessary to sum up the total delivery value for the specified date
         // Hint: Look at sumOfDouble()
-        return 0.0d;
     }
 
     public Customer getTopCustomer()
     {
         // TODO - Write the code necessary to find the max Customer by total donuts ordered
         // Hint: There is a method maxBy on all RichIterables
-        return null;
+        return customers.maxBy(Customer::getTotalDonutsOrdered);
     }
 
     public Multimap<DonutType, Customer> getCustomersByDonutTypesOrdered()
     {
         // TODO - Group all of the Customers by the Donut Types they order
         // Hint: There is a method groupByEach which takes a function which returns Iterable
-        return null;
+        return customers.groupByEach(Customer::getDonutTypesOrdered);
     }
 
     public DoubleSummaryStatistics getDonutPriceStatistics(LocalDate fromDate, LocalDate toDate)
     {
         // TODO - Calculate the DoubleSummaryStatistics for the deliveries inclusive of the specified date range.
         // Hint: Look at select(), flatCollect() and summarizeDouble()
-        return null;
+        return this.deliveries
+                .select(Predicates.attributeGreaterThanOrEqualTo(Delivery::getDate, fromDate))
+                .select(Predicates.attributeLessThanOrEqualTo(Delivery::getDate, toDate))
+                .flatCollect(Delivery::getDonuts)
+                .summarizeDouble(Donut::getPrice);
+
     }
 
     @Override
